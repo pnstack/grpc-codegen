@@ -1,0 +1,19 @@
+[package]
+name = "rust-grpc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+prost = "0.11.6"
+tonic = "0.8.3"
+tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread"] }
+protobuf        = "2"
+httpbis         = { git = "https://github.com/stepancheg/rust-http2" }
+grpc ="*"
+grpc-protobuf="*"
+
+[build-dependencies]
+tonic-build = "0.8.4"
+protoc-rust-grpc = "0.8.2"
