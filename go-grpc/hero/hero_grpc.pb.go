@@ -23,6 +23,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HeroesServiceClient interface {
 	FindOne(ctx context.Context, in *HeroById, opts ...grpc.CallOption) (*Hero, error)
+	ServerStream(ctx context.Context, in *ServerStreamRequest, opts ...grpc.CallOption) (HeroesService_ServerStreamClient, error)
+	ClientStream(ctx context.Context, opts ...grpc.CallOption) (HeroesService_ClientStreamClient, error)
+	TwoWayStream(ctx context.Context, opts ...grpc.CallOption) (HeroesService_TwoWayStreamClient, error)
 }
 
 type heroesServiceClient struct {
@@ -42,11 +45,111 @@ func (c *heroesServiceClient) FindOne(ctx context.Context, in *HeroById, opts ..
 	return out, nil
 }
 
+func (c *heroesServiceClient) ServerStream(ctx context.Context, in *ServerStreamRequest, opts ...grpc.CallOption) (HeroesService_ServerStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &HeroesService_ServiceDesc.Streams[0], "/hero.HeroesService/ServerStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &heroesServiceServerStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type HeroesService_ServerStreamClient interface {
+	Recv() (*ServerStreamResponse, error)
+	grpc.ClientStream
+}
+
+type heroesServiceServerStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *heroesServiceServerStreamClient) Recv() (*ServerStreamResponse, error) {
+	m := new(ServerStreamResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *heroesServiceClient) ClientStream(ctx context.Context, opts ...grpc.CallOption) (HeroesService_ClientStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &HeroesService_ServiceDesc.Streams[1], "/hero.HeroesService/ClientStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &heroesServiceClientStreamClient{stream}
+	return x, nil
+}
+
+type HeroesService_ClientStreamClient interface {
+	Send(*ClientStreamRequest) error
+	CloseAndRecv() (*ClientStreamResponse, error)
+	grpc.ClientStream
+}
+
+type heroesServiceClientStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *heroesServiceClientStreamClient) Send(m *ClientStreamRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *heroesServiceClientStreamClient) CloseAndRecv() (*ClientStreamResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(ClientStreamResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *heroesServiceClient) TwoWayStream(ctx context.Context, opts ...grpc.CallOption) (HeroesService_TwoWayStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &HeroesService_ServiceDesc.Streams[2], "/hero.HeroesService/TwoWayStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &heroesServiceTwoWayStreamClient{stream}
+	return x, nil
+}
+
+type HeroesService_TwoWayStreamClient interface {
+	Send(*TwoWayStreamRequest) error
+	Recv() (*TwoWayStreamResponse, error)
+	grpc.ClientStream
+}
+
+type heroesServiceTwoWayStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *heroesServiceTwoWayStreamClient) Send(m *TwoWayStreamRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *heroesServiceTwoWayStreamClient) Recv() (*TwoWayStreamResponse, error) {
+	m := new(TwoWayStreamResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // HeroesServiceServer is the server API for HeroesService service.
 // All implementations must embed UnimplementedHeroesServiceServer
 // for forward compatibility
 type HeroesServiceServer interface {
 	FindOne(context.Context, *HeroById) (*Hero, error)
+	ServerStream(*ServerStreamRequest, HeroesService_ServerStreamServer) error
+	ClientStream(HeroesService_ClientStreamServer) error
+	TwoWayStream(HeroesService_TwoWayStreamServer) error
 	mustEmbedUnimplementedHeroesServiceServer()
 }
 
@@ -56,6 +159,15 @@ type UnimplementedHeroesServiceServer struct {
 
 func (UnimplementedHeroesServiceServer) FindOne(context.Context, *HeroById) (*Hero, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindOne not implemented")
+}
+func (UnimplementedHeroesServiceServer) ServerStream(*ServerStreamRequest, HeroesService_ServerStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method ServerStream not implemented")
+}
+func (UnimplementedHeroesServiceServer) ClientStream(HeroesService_ClientStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method ClientStream not implemented")
+}
+func (UnimplementedHeroesServiceServer) TwoWayStream(HeroesService_TwoWayStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method TwoWayStream not implemented")
 }
 func (UnimplementedHeroesServiceServer) mustEmbedUnimplementedHeroesServiceServer() {}
 
@@ -88,6 +200,79 @@ func _HeroesService_FindOne_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HeroesService_ServerStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ServerStreamRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(HeroesServiceServer).ServerStream(m, &heroesServiceServerStreamServer{stream})
+}
+
+type HeroesService_ServerStreamServer interface {
+	Send(*ServerStreamResponse) error
+	grpc.ServerStream
+}
+
+type heroesServiceServerStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *heroesServiceServerStreamServer) Send(m *ServerStreamResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _HeroesService_ClientStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(HeroesServiceServer).ClientStream(&heroesServiceClientStreamServer{stream})
+}
+
+type HeroesService_ClientStreamServer interface {
+	SendAndClose(*ClientStreamResponse) error
+	Recv() (*ClientStreamRequest, error)
+	grpc.ServerStream
+}
+
+type heroesServiceClientStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *heroesServiceClientStreamServer) SendAndClose(m *ClientStreamResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *heroesServiceClientStreamServer) Recv() (*ClientStreamRequest, error) {
+	m := new(ClientStreamRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _HeroesService_TwoWayStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(HeroesServiceServer).TwoWayStream(&heroesServiceTwoWayStreamServer{stream})
+}
+
+type HeroesService_TwoWayStreamServer interface {
+	Send(*TwoWayStreamResponse) error
+	Recv() (*TwoWayStreamRequest, error)
+	grpc.ServerStream
+}
+
+type heroesServiceTwoWayStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *heroesServiceTwoWayStreamServer) Send(m *TwoWayStreamResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *heroesServiceTwoWayStreamServer) Recv() (*TwoWayStreamRequest, error) {
+	m := new(TwoWayStreamRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // HeroesService_ServiceDesc is the grpc.ServiceDesc for HeroesService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +285,23 @@ var HeroesService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _HeroesService_FindOne_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ServerStream",
+			Handler:       _HeroesService_ServerStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ClientStream",
+			Handler:       _HeroesService_ClientStream_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "TwoWayStream",
+			Handler:       _HeroesService_TwoWayStream_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "hero/hero.proto",
 }

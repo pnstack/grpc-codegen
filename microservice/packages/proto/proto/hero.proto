@@ -3,13 +3,30 @@ syntax = "proto3";
 
 package hero;
 
-service HeroesService {
-  rpc FindOne(HeroById) returns (Hero) {}
-}
+option go_package = "./hero";
 
 message HeroById { int32 id = 1; }
 
 message Hero {
   int32 id = 1;
   string name = 2;
+}
+
+message ServerStreamRequest { int32 num = 1; }
+
+message ServerStreamResponse { int32 num = 1; }
+
+message ClientStreamRequest { int32 num = 1; }
+
+message ClientStreamResponse { int32 num = 1; }
+
+message TwoWayStreamRequest { int32 num = 1; }
+message TwoWayStreamResponse { int32 num = 1; }
+
+service HeroesService {
+  rpc FindOne(HeroById) returns (Hero) {}
+  rpc ServerStream(ServerStreamRequest) returns (stream ServerStreamResponse) {}
+  rpc ClientStream(stream ClientStreamRequest) returns (ClientStreamResponse) {}
+  rpc TwoWayStream(stream TwoWayStreamRequest)
+      returns (stream TwoWayStreamResponse) {}
 }

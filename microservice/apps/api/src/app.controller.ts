@@ -7,9 +7,10 @@ export class AppController {
 
   @Get()
   getHello() {
-    console.log("get hello")
-    const res = this.appService.getHero();
-
-     return res;
+    console.log('get hello');
+    // this.appService.serverStream();
+    // this.appService.clientStream();
+    this.appService.twoWayStream();
+    return 'ok';
   }
 }

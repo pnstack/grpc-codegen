@@ -1,7 +1,10 @@
 // hero/hero.proto
 syntax = "proto3";
 
-package hello;
+package hero;
+
+
+option go_package="./hero";
 
 service HeroesService {
   rpc FindOne(HeroById) returns (Hero) {}

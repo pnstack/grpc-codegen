@@ -6,6 +6,7 @@ import (
 	"learn-hero/hero"
 	"log"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 )
@@ -21,6 +22,64 @@ func (*server) FindOne(ctx context.Context, req *hero.HeroById) (*hero.Hero, err
 		Name: "test",
 	}
 	return resq, nil
+}
+
+func (*server) ServerStream(req *hero.ServerStreamRequest, stream hero.HeroesService_ServerStreamServer) error {
+	fmt.Printf("ServerStream function was invoked with %v", req)
+
+	num := req.GetNum()
+	var i int32
+	for i = 0; i < num; i++ {
+		resq := &hero.ServerStreamResponse{
+			Num: int32(i),
+		}
+		stream.Send(resq)
+		time.Sleep(1000)
+	}
+
+	return nil
+}
+
+func (*server) ClientStream(stream hero.HeroesService_ClientStreamServer) error {
+	fmt.Printf("ClientStream function was invoked with %v", stream)
+
+	var sum int32
+	for {
+		req, err := stream.Recv()
+		if err != nil {
+			break
+		}
+		sum += req.GetNum()
+	}
+	resq := &hero.ClientStreamResponse{
+		Num: sum,
+	}
+	return stream.SendAndClose(resq)
+}
+
+func (*server) TwoWayStream(stream hero.HeroesService_TwoWayStreamServer) error {
+	fmt.Printf("TwoWayStream function was invoked with %v", stream)
+	i := 0
+	sum := int32(0)
+	for {
+		req, err := stream.Recv()
+		if err != nil {
+			break
+		}
+
+		sum += req.GetNum()
+		i += 1
+		if i == 3 {
+			resq := &hero.TwoWayStreamResponse{
+				Num: sum,
+			}
+			stream.Send(resq)
+			sum = 0
+			i = 0
+		}
+
+	}
+	return nil
 }
 
 func main() {
