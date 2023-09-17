@@ -4,6 +4,8 @@ import {
   ClientStreamRequest,
   ClientStreamResponse,
   HeroesService,
+  TwoWayStreamRequest,
+  TwoWayStreamResponse,
 } from '@nstack/proto';
 import { interval, lastValueFrom, map, Observable, ReplaySubject } from 'rxjs';
 
@@ -89,21 +91,23 @@ export class AppService implements OnModuleInit {
     //   },
     // });
 
-    const requests$ = interval(1000).pipe(
-      map((num) => {
-        const request: ClientStreamResponse = {
-          num: 10,
-        };
-        return request;
-      }),
-    );
+    // const requests$ = interval(1000).pipe(
+    //   map((num) => {
+    //     const request: ClientStreamResponse = {
+    //       num: 10,
+    //     };
+    //     return request;
+    //   }),
+    // );
 
-    // @ts-ignore
-    this.heroesService.ClientStream(requests$).subscribe({
-      next(value) {
-        console.log(value);
-      },
-    });
-    console.log("stream")
+    // // @ts-ignore
+    // this.heroesService.ClientStream(requests$).subscribe({
+    //   next(value) {
+    //     console.log(value);
+    //   },
+    // });
+    // console.log("stream")
+
+    const call = this.heroesService.TwoWayStream;
   }
 }
