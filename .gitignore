@@ -1,0 +1,30 @@
+# Generated files directory structure - keep the directories but ignore some build artifacts
+generated/rust/target/
+generated/rust/Cargo.lock
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Protoc compiler
+protoc/
+protoc-*.zip
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

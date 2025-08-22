@@ -1,0 +1,27 @@
+{
+  "name": "grpc-codegen-tool",
+  "version": "1.0.0",
+  "description": "Multi-language gRPC code generator",
+  "main": "codegen.js",
+  "bin": {
+    "grpc-codegen": "./codegen.js"
+  },
+  "scripts": {
+    "build": "node codegen.js",
+    "build:go": "node codegen.js --language=go",
+    "build:python": "node codegen.js --language=python", 
+    "build:rust": "node codegen.js --language=rust",
+    "build:typescript": "node codegen.js --language=typescript",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["grpc", "protobuf", "codegen", "multi-language"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^11.0.0",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "ts-proto": "^1.138.0"
+  }
+}
