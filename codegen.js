@@ -15,8 +15,38 @@ const PROTOC_PATH = path.join(__dirname, 'protoc', 'bin', 'protoc');
 
 // Ensure protoc exists
 if (!fs.existsSync(PROTOC_PATH)) {
-    console.error(chalk.red('Error: protoc not found. Please install Protocol Buffers compiler.'));
-    process.exit(1);
+    console.log(chalk.yellow('Protoc not found. Downloading and installing...'));
+    try {
+        const os = process.platform;
+        const arch = process.arch;
+        let protocUrl;
+        let protocFile;
+        
+        if (os === 'linux' && arch === 'x64') {
+            protocFile = 'protoc-24.4-linux-x86_64.zip';
+        } else if (os === 'darwin' && arch === 'x64') {
+            protocFile = 'protoc-24.4-osx-x86_64.zip';
+        } else if (os === 'darwin' && arch === 'arm64') {
+            protocFile = 'protoc-24.4-osx-aarch_64.zip';
+        } else if (os === 'win32') {
+            protocFile = 'protoc-24.4-win64.zip';
+        } else {
+            console.error(chalk.red(`Error: Unsupported platform ${os}-${arch}. Please install protoc manually.`));
+            process.exit(1);
+        }
+        
+        protocUrl = `https://github.com/protocolbuffers/protobuf/releases/download/v24.4/${protocFile}`;
+        
+        console.log(chalk.blue(`Downloading ${protocFile}...`));
+        execSync(`curl -LO ${protocUrl}`, { stdio: 'inherit' });
+        execSync(`unzip -q ${protocFile} -d protoc && chmod +x protoc/bin/protoc`, { stdio: 'inherit' });
+        execSync(`rm -f ${protocFile}`, { stdio: 'inherit' });
+        console.log(chalk.green('Protoc installed successfully!'));
+    } catch (error) {
+        console.error(chalk.red('Failed to install protoc automatically. Please install it manually.'));
+        console.error(chalk.red('Visit: https://github.com/protocolbuffers/protobuf/releases'));
+        process.exit(1);
+    }
 }
 
 // Language-specific generators
